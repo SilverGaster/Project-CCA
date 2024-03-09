@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Webcam Video Feed</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    </head>
+    <body>
+        <img id="video_feed" src="{{ url_for('video_feed') }}">
+        <button id="connect_btn">CONNECT</button>
+        <button id="up_btn">UP</button>
+        <button id="down_btn">DOWN</button>
+        <button id="left_btn">LEFT</button>
+        <button id="right_btn">RIGHT</button>
+        <button id="capture_btn">Capture Image</button>
+        <script>
+            var socket = io.connect('http://localhost:5000/192.168.159.128');
+        
+            document.getElementById('up_btn').addEventListener('click', function() {
+                socket.emit('move', {direction: 'up'});
+            });
+        
+            document.getElementById('down_btn').addEventListener('click', function() {
+                socket.emit('move', {direction: 'down'});
+            });
+        
+            document.getElementById('left_btn').addEventListener('click', function() {
+                socket.emit('move', {direction: 'left'});
+            });
+        
+            document.getElementById('right_btn').addEventListener('click', function() {
+                socket.emit('move', {direction: 'right'});
+            });
+        
+            document.getElementById('capture_btn').addEventListener('click', function() {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', '/capture', true);
+                xhr.responseType = 'blob';
+                xhr.onload = function() {
+                    if (this.status === 200) {
+                        var blob = this.response;
+                        var img = document.createElement('img');
+                        img.onload = function() {
+                            window.URL.revokeObjectURL(img.src); // Clean up after yourself.
+                        };
+                        img.src = window.URL.createObjectURL(blob);
+                        document.body.appendChild(img); // Add the image to the page.
+                    }
+                };
+                xhr.send();
+            });
+        
+            socket.on('response', function(msg) {
+                console.log(msg.data);
+            });
+        </script>
+    </body>
+</html>
